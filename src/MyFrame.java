@@ -48,14 +48,11 @@ public class MyFrame extends JFrame implements FrameGetShape {
 			BufferedImage.TYPE_INT_BGR); // 创建一个8 位 BGR 颜色分量的图像
 	Graphics gs = image.getGraphics(); // 获得图像的绘图对象
 	Graphics2D g = (Graphics2D) gs; // 将绘图对象转换为Graphics2D类型
-	MyCanvas canvas = new MyCanvas(); // 创建画布对象
-	Color foreColor = Color.BLACK; // 定义前景色
-	Color backgroundColor = Color.WHITE; // 定义背景色
-	boolean rubber = false; // 橡皮标识变量
-	boolean drawShape = false; // 画图形标识变量
-	Shapes shape;// 绘画的图形
-	int x = -1; // 上一次鼠标绘制点的横坐标
-	int y = -1; // 上一次鼠标绘制点的纵坐标
+	MyCanvas canvas = new MyCanvas(g); // 创建画布对象
+
+
+
+
 	private JToolBar toolBar;// 工具栏
 	private JButton eraserButton;// 橡皮按钮
 	private JToggleButton strokeButton1;// 细线按钮
@@ -66,6 +63,7 @@ public class MyFrame extends JFrame implements FrameGetShape {
 	private JButton clearButton;// 清除按钮
 	private JButton saveButton;// 保存按钮
 	private JButton shapeButton;// 图形按钮
+	private JButton textButton;//文本按钮
 	private JMenuItem strokeMenuItem1;// 细线菜单
 	private JMenuItem strokeMenuItem2;// 粗线菜单
 	private JMenuItem strokeMenuItem3;// 较粗菜单
@@ -93,9 +91,9 @@ public class MyFrame extends JFrame implements FrameGetShape {
 	 * 组件初始化
 	 */
 	private void init() {
-		g.setColor(backgroundColor); // 用背景色设置绘图对象的颜色
+		g.setColor(canvas.backgroundColor); // 用背景色设置绘图对象的颜色
 		g.fillRect(0, 0, 583, 498); // 用背景色填充整个画布
-		g.setColor(foreColor); // 用前景色设置绘图对象的颜色
+		g.setColor(canvas.foreColor); // 用前景色设置绘图对象的颜色
 		canvas.setImage(image); // 设置画布的图像
 		getContentPane().add(canvas); // 将画布添加到窗体容器默认布局的中部位置
 		toolBar = new JToolBar();// 初始化工具栏
@@ -148,6 +146,10 @@ public class MyFrame extends JFrame implements FrameGetShape {
 		eraserButton.setToolTipText("橡皮");// 设置按钮鼠标悬停提示
 		eraserButton.setIcon(new ImageIcon("src/img/icon/橡皮.png"));// 设置按钮图标
 		toolBar.add(eraserButton);// 工具栏添加按钮
+        textButton = new JButton();// 初始化按钮对象，并添加文本内容
+        textButton.setToolTipText("文本");// 设置按钮鼠标悬停提示
+        textButton.setIcon(new ImageIcon("src/img/icon/橡皮.png"));// 设置按钮图标
+        toolBar.add(textButton);// 工具栏添加按钮
 
 		JMenuBar menuBar = new JMenuBar();// 创建菜单栏
 		setJMenuBar(menuBar);// 窗体载入菜单栏
@@ -183,294 +185,241 @@ public class MyFrame extends JFrame implements FrameGetShape {
 		eraserMenuItem = new JMenuItem("橡皮");// 初始化菜单项对象，并添加文本内容
 		editMenu.add(eraserMenuItem);// 菜单添加菜单项
 
-
 	}
 
 	/**
 	 * 无组件添加动作监听
 	 */
-	private void addListener() {
-		// 画板添加鼠标移动事件监听
-		canvas.addMouseMotionListener(new MouseMotionAdapter() {
-			public void mouseDragged(final MouseEvent e) {// 当鼠标拖拽时
-				if (x > 0 && y > 0) {// 如果x和y存在鼠标记录
-					if (rubber) {// 橡皮标识为true，表示使用橡皮
-						g.setColor(backgroundColor); // 绘图工具使用背景色
-						g.fillRect(x, y, 10, 10); // 在鼠标划过的位置画填充的正方型
-					} else { // 如果橡皮标识为false，表示用画笔画图
-						g.drawLine(x, y, e.getX(), e.getY());// 在鼠标划过的位置画直线
-					}// else结束
-				}// if结束
-				x = e.getX(); // 上一次鼠标绘制点的横坐标
-				y = e.getY(); // 上一次鼠标绘制点的纵坐标
-				canvas.repaint(); // 更新画布
-			}
 
-			public void mouseMoved(final MouseEvent arg0) {// 当鼠标移动时
-				if (rubber) {// 如果使用橡皮
-					// 设置鼠标指针的形状为图片
-					Toolkit kit = Toolkit.getDefaultToolkit();// 获得系统默认的组件工具包
-					Image img = kit.createImage("src/img/icon/鼠标橡皮.png");// 利用工具包获取图片
-					// 利用工具包创建一个自定义的光标对象,参数为图片，光标热点(写成0,0就行)和光标描述
-					Cursor c = kit.createCustomCursor(img, new Point(0, 0),
-							"clear");
-					setCursor(c);// 使用自定义的光标
-				} else {
-					// 设置鼠标指针的形状
-					setCursor(Cursor
-							.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));// 设置鼠标指针的形状为十字光标
-				}
-			}
-		});
-		canvas.addMouseListener(new MouseAdapter() {// 画板鼠标点击事件监听事件
-			public void mouseReleased(final MouseEvent arg0) {// 当按键抬起时
-				x = -1; // 将记录上一次鼠标绘制点的横坐标恢复成-1
-				y = -1; // 将记录上一次鼠标绘制点的纵坐标恢复成-1
-			}
+    private void addListener(){
 
-			public void mousePressed(MouseEvent e) {// 当按键按下时
-				if (drawShape) {// 如果此时鼠标画的是图形
-					switch (shape.getType()) {// 判断图形的种类
-					case Shapes.YUAN:// 如果是圆形
-						// 计算坐标，让鼠标处于图形的中心位置
-						int yuanX = e.getX() - shape.getWidth() / 2;
-						int yuanY = e.getY() - shape.getHeigth() / 2;
-						// 创建圆形图形，并指定坐标和宽高
-						Ellipse2D yuan = new Ellipse2D.Double(yuanX, yuanY,
-								shape.getWidth(), shape.getHeigth());
-						g.draw(yuan);// 画图工具画此圆形
-						break;// 结束switch语句
-					case Shapes.FANG:// 如果是方形
-						// 计算坐标，让鼠标处于图形的中心位置
-						int fangX = e.getX() - shape.getWidth() / 2;
-						int fangY = e.getY() - shape.getHeigth() / 2;
-						// 创建方形图形，并指定坐标和宽高
-						Rectangle2D fang = new Rectangle2D.Double(fangX, fangY,
-								shape.getWidth(), shape.getHeigth());
-						g.draw(fang);// 画图工具画此方形
-						break;// 结束switch语句
-					}
-					canvas.repaint(); // 更新画布
-					drawShape = false;
-				}
-			}
-		});
-		toolBar.addMouseMotionListener(new MouseMotionAdapter() {// 工具栏添加鼠标移动监听
-			public void mouseMoved(final MouseEvent arg0) {// 当鼠标移动时
-				setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));// 设置鼠标指针的形状为默认光标
-			}
-		});
-		exitMenuItem.addActionListener(new ActionListener() {// 退出菜单栏添加动作监听
-					public void actionPerformed(final ActionEvent e) {// 点击时
-						System.exit(0);// 程序关闭
-					}
-				});
-		eraserMenuItem.addActionListener(new ActionListener() {// 橡皮菜单栏添加动作监听
-					public void actionPerformed(final ActionEvent e) {// 点击时
-						if (rubber) { // 如果菜单的文字内容为“橡皮”
-							eraserButton.setToolTipText("橡皮");// 设置按钮鼠标悬停提示
-							// 设置按钮图标
-							eraserButton.setIcon(new ImageIcon("src/img/icon/橡皮.png"));
-							eraserMenuItem.setText("橡皮"); // 改变菜单上显示的文本为橡皮
-							g.setColor(foreColor); // 设置绘图对象的前景色
-							rubber = false;// 橡皮标识变量设为fasle，表示当前使用画笔
-						} else { // 单击工具栏上的画图按钮，使用画笔
-							eraserMenuItem.setText("画图"); // 改变菜单上显示的文本为画图
-							eraserButton.setToolTipText("画图"); // 设置按钮鼠标悬停提示
-							// 设置按钮图标
-							eraserButton.setIcon(null);
-							g.setColor(backgroundColor); // 设置绘图对象的前景色
-							rubber = true;// 橡皮标识变量设为true，表示当前使用橡皮
-						}
-					}
-				});
+        canvas.addListener();
 
-		strokeButton1.addActionListener(new ActionListener() {// “细线”按钮添加动作监听
-					public void actionPerformed(final ActionEvent arg0) {// 点击时
-						// 声明画笔的属性，粗细为1像素，线条末端无修饰，折线处呈尖角
-						BasicStroke bs = new BasicStroke(1,
-								BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-						g.setStroke(bs); // 画图工具使用此画笔
-					}
-				});
+        toolBar.addMouseMotionListener(new MouseMotionAdapter() {// 工具栏添加鼠标移动监听
+            public void mouseMoved(final MouseEvent arg0) {// 当鼠标移动时
+                setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));// 设置鼠标指针的形状为默认光标
+            }
+        });
+        exitMenuItem.addActionListener(new ActionListener() {// 退出菜单栏添加动作监听
+            public void actionPerformed(final ActionEvent e) {// 点击时
+                System.exit(0);// 程序关闭
+            }
+        });
+        eraserMenuItem.addActionListener(new ActionListener() {// 橡皮菜单栏添加动作监听
+            public void actionPerformed(final ActionEvent e) {// 点击时
+                if (canvas.rubber) { // 如果菜单的文字内容为“橡皮”
+                    eraserButton.setToolTipText("橡皮");// 设置按钮鼠标悬停提示
+                    // 设置按钮图标
+                    eraserButton.setIcon(new ImageIcon("src/img/icon/橡皮.png"));
+                    eraserMenuItem.setText("橡皮"); // 改变菜单上显示的文本为橡皮
+                    g.setColor(canvas.foreColor); // 设置绘图对象的前景色
+                    canvas.rubber = false;// 橡皮标识变量设为fasle，表示当前使用画笔
+                } else { // 单击工具栏上的画图按钮，使用画笔
+                    eraserMenuItem.setText("画图"); // 改变菜单上显示的文本为画图
+                    eraserButton.setToolTipText("画图"); // 设置按钮鼠标悬停提示
+                    // 设置按钮图标
+                    eraserButton.setIcon(null);
+                    g.setColor(canvas.backgroundColor); // 设置绘图对象的前景色
+                    canvas.rubber = true;// 橡皮标识变量设为true，表示当前使用橡皮
+                }
+            }
+        });
 
-		strokeButton2.addActionListener(new ActionListener() {// “粗线”按钮添加动作监听
-					public void actionPerformed(final ActionEvent arg0) {
-						// 声明画笔的属性，粗细为2像素，线条末端无修饰，折线处呈尖角
-						BasicStroke bs = new BasicStroke(2,
-								BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-						g.setStroke(bs); // 画图工具使用此画笔
-					}
-				});
+        strokeButton1.addActionListener(new ActionListener() {// “细线”按钮添加动作监听
+            public void actionPerformed(final ActionEvent arg0) {// 点击时
+                // 声明画笔的属性，粗细为1像素，线条末端无修饰，折线处呈尖角
+                BasicStroke bs = new BasicStroke(1,
+                        BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
+                g.setStroke(bs); // 画图工具使用此画笔
+            }
+        });
 
-		strokeButton3.addActionListener(new ActionListener() {// “较粗”按钮添加动作监听
-					public void actionPerformed(final ActionEvent arg0) {
-						// 声明画笔的属性，粗细为4像素，线条末端无修饰，折线处呈尖角
-						BasicStroke bs = new BasicStroke(4,
-								BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-						g.setStroke(bs); // 画图工具使用此画笔
-					}
-				});
+        strokeButton2.addActionListener(new ActionListener() {// “粗线”按钮添加动作监听
+            public void actionPerformed(final ActionEvent arg0) {
+                // 声明画笔的属性，粗细为2像素，线条末端无修饰，折线处呈尖角
+                BasicStroke bs = new BasicStroke(2,
+                        BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
+                g.setStroke(bs); // 画图工具使用此画笔
+            }
+        });
 
-		backgroundButton.addActionListener(new ActionListener() {// 背景颜色按钮添加动作监听
-					public void actionPerformed(final ActionEvent arg0) {// 点击时
-						// 打开选择颜色对话框，参数依次为：父窗体、标题、默认选中的颜色（青色）
-						Color bgColor = JColorChooser.showDialog(
-								MyFrame.this, "选择颜色对话框", Color.CYAN);
-						if (bgColor != null) {// 如果选中的颜色不是空的
-							backgroundColor = bgColor;// 将选中的颜色赋给背景色变量
-						}
-						backgroundButton.setBackground(backgroundColor);// 背景色按钮的也更换为这种背景颜色
-						g.setColor(backgroundColor); // 绘图工具使用背景色
-						g.fillRect(0, 0, 570, 390); // 画一个背景颜色的方形填满整个画布
-						g.setColor(foreColor); // 绘图工具使用前景色
-						canvas.repaint(); // 更新画布
-					}
-				});
-		foregroundButton.addActionListener(new ActionListener() {// 前景色颜色按钮添加动作监听
-					public void actionPerformed(final ActionEvent arg0) {// 点击时
-						// 打开选择颜色对话框,参数依次为：父窗体、标题、默认选中的颜色（青色）
-						Color fColor = JColorChooser.showDialog(
-								MyFrame.this, "选择颜色对话框", Color.CYAN);
-						if (fColor != null) {// 如果选中的颜色不是空的
-							foreColor = fColor;// 将选中的颜色赋给前景色变量
-						}
-						foregroundButton.setBackground(foreColor);// 前景色按钮的文字也更换为这种颜色
-						g.setColor(foreColor); // 绘图工具使用前景色
-					}
-				});
-		clearButton.addActionListener(new ActionListener() {// 清除按钮添加动作监听
-					public void actionPerformed(final ActionEvent arg0) {// 点击时
-						g.setColor(backgroundColor); // 绘图工具使用背景色
-						g.fillRect(0, 0, 570, 390); // 画一个背景颜色的方形填满整个画布
-						g.setColor(foreColor); // 绘图工具使用前景色
-						canvas.repaint(); // 更新画布
-					}
-				});
+        strokeButton3.addActionListener(new ActionListener() {// “较粗”按钮添加动作监听
+            public void actionPerformed(final ActionEvent arg0) {
+                // 声明画笔的属性，粗细为4像素，线条末端无修饰，折线处呈尖角
+                BasicStroke bs = new BasicStroke(4,
+                        BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
+                g.setStroke(bs); // 画图工具使用此画笔
+            }
+        });
 
-		eraserButton.addActionListener(new ActionListener() {// 橡皮按钮添加动作监听
-					public void actionPerformed(final ActionEvent arg0) {// 点击时
-						if (rubber) { // 如果菜单的文字内容为“橡皮”
-							eraserButton.setToolTipText("橡皮");// 设置按钮鼠标悬停提示
-							// 设置按钮图标
-							eraserButton.setIcon(new ImageIcon(
-									"src/img/icon/橡皮.png"));
-							eraserMenuItem.setText("橡皮"); // 改变菜单上显示的文本为橡皮
-							g.setColor(foreColor); // 设置绘图对象的前景色
-							rubber = false;// 橡皮标识变量设为fasle，表示当前使用画笔
-						} else { // 单击工具栏上的画图按钮，使用画笔
-							eraserMenuItem.setText("画图"); // 改变菜单上显示的文本为画图
-							eraserButton.setToolTipText("画图"); // 设置按钮鼠标悬停提示
-							// 设置按钮图标
-							eraserButton.setIcon(new ImageIcon(
-									"src/img/icon/画笔.png"));
-							g.setColor(backgroundColor); // 设置绘图对象的前景色
-							rubber = true;// 橡皮标识变量设为true，表示当前使用橡皮
-						}
-					}
-				});
+        backgroundButton.addActionListener(new ActionListener() {// 背景颜色按钮添加动作监听
+            public void actionPerformed(final ActionEvent arg0) {// 点击时
+                // 打开选择颜色对话框，参数依次为：父窗体、标题、默认选中的颜色（青色）
+                Color bgColor = JColorChooser.showDialog(
+                        MyFrame.this, "选择颜色对话框", Color.CYAN);
+                if (bgColor != null) {// 如果选中的颜色不是空的
+                    canvas.backgroundColor = bgColor;// 将选中的颜色赋给背景色变量
+                }
+                backgroundButton.setBackground(canvas.backgroundColor);// 背景色按钮的也更换为这种背景颜色
+                g.setColor(canvas.backgroundColor); // 绘图工具使用背景色
+                g.fillRect(0, 0, 570, 390); // 画一个背景颜色的方形填满整个画布
+                g.setColor(canvas.foreColor); // 绘图工具使用前景色
+                canvas.repaint(); // 更新画布
+            }
+        });
+        foregroundButton.addActionListener(new ActionListener() {// 前景色颜色按钮添加动作监听
+            public void actionPerformed(final ActionEvent arg0) {// 点击时
+                // 打开选择颜色对话框,参数依次为：父窗体、标题、默认选中的颜色（青色）
+                Color fColor = JColorChooser.showDialog(
+                        MyFrame.this, "选择颜色对话框", Color.CYAN);
+                if (fColor != null) {// 如果选中的颜色不是空的
+                    canvas.foreColor = fColor;// 将选中的颜色赋给前景色变量
+                }
+                foregroundButton.setBackground(canvas.foreColor);// 前景色按钮的文字也更换为这种颜色
+                g.setColor(canvas.foreColor); // 绘图工具使用前景色
+            }
+        });
+        clearButton.addActionListener(new ActionListener() {// 清除按钮添加动作监听
+            public void actionPerformed(final ActionEvent arg0) {// 点击时
+                g.setColor(canvas.backgroundColor); // 绘图工具使用背景色
+                g.fillRect(0, 0, 570, 390); // 画一个背景颜色的方形填满整个画布
+                g.setColor(canvas.foreColor); // 绘图工具使用前景色
+                canvas.repaint(); // 更新画布
+            }
+        });
 
-		clearMenuItem.addActionListener(new ActionListener() {// 清除菜单添加动作监听
-					public void actionPerformed(final ActionEvent e) {// 点击时
-						g.setColor(backgroundColor); // 绘图工具使用背景色
-						g.fillRect(0, 0, 570, 390); // 画一个背景颜色的方形填满整个画布
-						g.setColor(foreColor); // 绘图工具使用前景色
-						canvas.repaint(); // 更新画布
-					}
-				});
+        eraserButton.addActionListener(new ActionListener() {// 橡皮按钮添加动作监听
+            public void actionPerformed(final ActionEvent arg0) {// 点击时
+                if (canvas.rubber) { // 如果菜单的文字内容为“橡皮”
+                    eraserButton.setToolTipText("橡皮");// 设置按钮鼠标悬停提示
+                    // 设置按钮图标
+                    eraserButton.setIcon(new ImageIcon(
+                            "src/img/icon/橡皮.png"));
+                    eraserMenuItem.setText("橡皮"); // 改变菜单上显示的文本为橡皮
+                    g.setColor(canvas.foreColor); // 设置绘图对象的前景色
+                    canvas.rubber = false;// 橡皮标识变量设为fasle，表示当前使用画笔
+                } else { // 单击工具栏上的画图按钮，使用画笔
+                    eraserMenuItem.setText("画图"); // 改变菜单上显示的文本为画图
+                    eraserButton.setToolTipText("画图"); // 设置按钮鼠标悬停提示
+                    // 设置按钮图标
+                    eraserButton.setIcon(new ImageIcon(
+                            "src/img/icon/画笔.png"));
+                    g.setColor(canvas.backgroundColor); // 设置绘图对象的前景色
+                    canvas.rubber = true;// 橡皮标识变量设为true，表示当前使用橡皮
+                }
+                canvas.text = false;
+                canvas.drawShape = false;
+            }
+        });
 
-		strokeMenuItem1.addActionListener(new ActionListener() {// "细线"菜单添加动作监听
-					public void actionPerformed(final ActionEvent e) {// 点击时
-						// 声明画笔的属性，粗细为1像素，线条末端无修饰，折线处呈尖角
-						BasicStroke bs = new BasicStroke(1,
-								BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-						g.setStroke(bs);// 画图工具使用此画笔
-						strokeButton1.setSelected(true);// "细线"按钮设为选中状态
-					}
-				});
-		strokeMenuItem2.addActionListener(new ActionListener() {// "粗线"菜单添加动作监听
-					public void actionPerformed(final ActionEvent e) {// 点击时
-						// 声明画笔的属性，粗细为2像素，线条末端无修饰，折线处呈尖角
-						BasicStroke bs = new BasicStroke(2,
-								BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-						g.setStroke(bs); // 画图工具使用此画笔
-						strokeButton2.setSelected(true);// "粗线"按钮设为选中状态
-					}
-				});
-		strokeMenuItem3.addActionListener(new ActionListener() {// "较粗"菜单添加动作监听
-					public void actionPerformed(final ActionEvent e) {// 点击时
-						// 声明画笔的属性，粗细为4像素，线条末端无修饰，折线处呈尖角
-						BasicStroke bs = new BasicStroke(4,
-								BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
-						g.setStroke(bs); // 画图工具使用此画笔
-						strokeButton3.setSelected(true);// "较粗"按钮设为选中状态
-					}
-				});
-		foregroundMenuItem.addActionListener(new ActionListener() {// 前景色菜单添加动作监听
-					public void actionPerformed(final ActionEvent e) {// 点击时
-						// 打开选择颜色对话框,参数依次为：父窗体、标题、默认选中的颜色（青色）
-						Color fColor = JColorChooser.showDialog(
-								MyFrame.this, "选择颜色对话框", Color.CYAN);
-						if (fColor != null) {// 如果选中的颜色不是空的
-							foreColor = fColor;// 将选中的颜色赋给前景色变量
-						}
-						foregroundButton.setForeground(foreColor);// 前景色按钮的文字也更换为这种颜色
-						g.setColor(foreColor); // 绘图工具使用前景色
-					}
-				});
-		backgroundMenuItem.addActionListener(new ActionListener() {// 背景色菜单添加动作监听
-					public void actionPerformed(final ActionEvent e) {// 点击时
-						// 打开选择颜色对话框，参数依次为：父窗体、标题、默认选中的颜色（青色）
-						Color bgColor = JColorChooser.showDialog(
-								MyFrame.this, "选择颜色对话框", Color.CYAN);
-						if (bgColor != null) {// 如果选中的颜色不是空的
-							backgroundColor = bgColor;// 将选中的颜色赋给背景色变量
-						}
-						backgroundButton.setBackground(backgroundColor);// 背景色按钮的也更换为这种背景颜色
-						g.setColor(backgroundColor); // 绘图工具使用背景色
-						g.fillRect(0, 0, 570, 390); // 画一个背景颜色的方形填满整个画布
-						g.setColor(foreColor); // 绘图工具使用前景色
-						canvas.repaint(); // 更新画布
-					}
-				});
-		saveButton.addActionListener(new ActionListener() {// 保存按钮添加动作监听
-					public void actionPerformed(final ActionEvent arg0) {// 点击时
-						DrawImageUtil.saveImage(MyFrame.this, image);// 打印图片
-					}
-				});
-		saveMenuItem.addActionListener(new ActionListener() {// 保存菜单添加动作监听
-					public void actionPerformed(ActionEvent e) {// 点击时
-						DrawImageUtil.saveImage(MyFrame.this, image);// 打印图片
-					}
-				});
+        textButton.addActionListener(new ActionListener() {// 橡皮按钮添加动作监听
+            public void actionPerformed(final ActionEvent arg0) {// 点击时
+                canvas.text = true;
+                canvas.rubber = false;
+                canvas.drawShape = false;
+            }
+        });
 
-		shapeButton.addActionListener(new ActionListener() {// 图形按钮添加动作监听
-					public void actionPerformed(ActionEvent e) {// 点击时
-						ShapeWindow shapeWindow = new ShapeWindow(
-								MyFrame.this);// 创建图形选择组件
-						int shapeButtonWidth = shapeButton.getWidth();// 获取图像按钮宽度
-						int shapeWindowWidth = shapeWindow.getWidth();// 获取图形按钮高度
-						int shapeButtonX = shapeButton.getX();// 获取图形按钮横坐标
-						int shapeButtonY = shapeButton.getY();// 获取图形按钮纵坐标
-						// 计算图形组件横坐标，为图形按钮下方与按钮居中对齐
-						int shapeWindowX = getX() + shapeButtonX
-								- (shapeWindowWidth - shapeButtonWidth) / 2;
-						// 计算图形组件纵坐标，为图形按钮下方
-						int shapeWindowY = getY() + shapeButtonY + 80;
-						// 设置图形组件坐标位置
-						shapeWindow.setLocation(shapeWindowX, shapeWindowY);
-						shapeWindow.setVisible(true);// 图形组件可见
-					}
-				});
-	}
+        clearMenuItem.addActionListener(new ActionListener() {// 清除菜单添加动作监听
+            public void actionPerformed(final ActionEvent e) {// 点击时
+                g.setColor(canvas.backgroundColor); // 绘图工具使用背景色
+                g.fillRect(0, 0, 570, 390); // 画一个背景颜色的方形填满整个画布
+                g.setColor(canvas.foreColor); // 绘图工具使用前景色
+                canvas.repaint(); // 更新画布
+            }
+        });
 
+        strokeMenuItem1.addActionListener(new ActionListener() {// "细线"菜单添加动作监听
+            public void actionPerformed(final ActionEvent e) {// 点击时
+                // 声明画笔的属性，粗细为1像素，线条末端无修饰，折线处呈尖角
+                BasicStroke bs = new BasicStroke(1,
+                        BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
+                g.setStroke(bs);// 画图工具使用此画笔
+                strokeButton1.setSelected(true);// "细线"按钮设为选中状态
+            }
+        });
+        strokeMenuItem2.addActionListener(new ActionListener() {// "粗线"菜单添加动作监听
+            public void actionPerformed(final ActionEvent e) {// 点击时
+                // 声明画笔的属性，粗细为2像素，线条末端无修饰，折线处呈尖角
+                BasicStroke bs = new BasicStroke(2,
+                        BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
+                g.setStroke(bs); // 画图工具使用此画笔
+                strokeButton2.setSelected(true);// "粗线"按钮设为选中状态
+            }
+        });
+        strokeMenuItem3.addActionListener(new ActionListener() {// "较粗"菜单添加动作监听
+            public void actionPerformed(final ActionEvent e) {// 点击时
+                // 声明画笔的属性，粗细为4像素，线条末端无修饰，折线处呈尖角
+                BasicStroke bs = new BasicStroke(4,
+                        BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER);
+                g.setStroke(bs); // 画图工具使用此画笔
+                strokeButton3.setSelected(true);// "较粗"按钮设为选中状态
+            }
+        });
+        foregroundMenuItem.addActionListener(new ActionListener() {// 前景色菜单添加动作监听
+            public void actionPerformed(final ActionEvent e) {// 点击时
+                // 打开选择颜色对话框,参数依次为：父窗体、标题、默认选中的颜色（青色）
+                Color fColor = JColorChooser.showDialog(
+                        MyFrame.this, "选择颜色对话框", Color.CYAN);
+                if (fColor != null) {// 如果选中的颜色不是空的
+                    canvas.foreColor = fColor;// 将选中的颜色赋给前景色变量
+                }
+                foregroundButton.setForeground(canvas.foreColor);// 前景色按钮的文字也更换为这种颜色
+                g.setColor(canvas.foreColor); // 绘图工具使用前景色
+            }
+        });
+        backgroundMenuItem.addActionListener(new ActionListener() {// 背景色菜单添加动作监听
+            public void actionPerformed(final ActionEvent e) {// 点击时
+                // 打开选择颜色对话框，参数依次为：父窗体、标题、默认选中的颜色（青色）
+                Color bgColor = JColorChooser.showDialog(
+                        MyFrame.this, "选择颜色对话框", Color.CYAN);
+                if (bgColor != null) {// 如果选中的颜色不是空的
+                    canvas.backgroundColor = bgColor;// 将选中的颜色赋给背景色变量
+                }
+                backgroundButton.setBackground(canvas.backgroundColor);// 背景色按钮的也更换为这种背景颜色
+                g.setColor(canvas.backgroundColor); // 绘图工具使用背景色
+                g.fillRect(0, 0, 570, 390); // 画一个背景颜色的方形填满整个画布
+                g.setColor(canvas.foreColor); // 绘图工具使用前景色
+                canvas.repaint(); // 更新画布
+            }
+        });
+        saveButton.addActionListener(new ActionListener() {// 保存按钮添加动作监听
+            public void actionPerformed(final ActionEvent arg0) {// 点击时
+                DrawImageUtil.saveImage(MyFrame.this, image);// 打印图片
+            }
+        });
+        saveMenuItem.addActionListener(new ActionListener() {// 保存菜单添加动作监听
+            public void actionPerformed(ActionEvent e) {// 点击时
+                DrawImageUtil.saveImage(MyFrame.this, image);// 打印图片
+            }
+        });
 
-	/**
+        shapeButton.addActionListener(new ActionListener() {// 图形按钮添加动作监听
+            public void actionPerformed(ActionEvent e) {// 点击时
+                ShapeWindow shapeWindow = new ShapeWindow(
+                        MyFrame.this);// 创建图形选择组件
+                int shapeButtonWidth = shapeButton.getWidth();// 获取图像按钮宽度
+                int shapeWindowWidth = shapeWindow.getWidth();// 获取图形按钮高度
+                int shapeButtonX = shapeButton.getX();// 获取图形按钮横坐标
+                int shapeButtonY = shapeButton.getY();// 获取图形按钮纵坐标
+                // 计算图形组件横坐标，为图形按钮下方与按钮居中对齐
+                int shapeWindowX = getX() + shapeButtonX
+                        - (shapeWindowWidth - shapeButtonWidth) / 2;
+                // 计算图形组件纵坐标，为图形按钮下方
+                int shapeWindowY = getY() + shapeButtonY + 80;
+                // 设置图形组件坐标位置
+                shapeWindow.setLocation(shapeWindowX, shapeWindowY);
+                shapeWindow.setVisible(true);// 图形组件可见
+            }
+        });
+    }
+
+    /**
 	 * FrameGetShape接口实现类，用于获得图形空间返回的被选中的图形
 	 */
 	public void getShape(Shapes shape) {
-		this.shape = shape;// 将返回的图形对象付给类的全局变量
-		drawShape = true;// 画图形标识变量为true，说明选择鼠标画的是图形，而不是线
+        canvas.shape = shape;// 将返回的图形对象付给类的全局变量
+        canvas.drawShape = true;// 画图形标识变量为true，说明选择鼠标画的是图形，而不是线
 	}// getShape()结束
 
 
