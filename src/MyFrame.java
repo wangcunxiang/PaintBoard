@@ -20,29 +20,9 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JColorChooser;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JToggleButton;
-import javax.swing.JToolBar;
+import javax.swing.*;
 
-import com.mr.util.DrawImageUtil;
-import com.mr.util.FrameGetShape;
-import com.mr.util.ShapeWindow;
-import com.mr.util.Shapes;
 
-/**
- * 画图主窗体
- * 
- * @开发单位 吉林省明日科技有限公司
- * @公司网址 www.mingribook.com
- */
 public class MyFrame extends JFrame implements FrameGetShape {
 	BufferedImage image = new BufferedImage(570, 390,
 			BufferedImage.TYPE_INT_BGR); // 创建一个8 位 BGR 颜色分量的图像
@@ -51,11 +31,10 @@ public class MyFrame extends JFrame implements FrameGetShape {
 	MyCanvas canvas = new MyCanvas(g); // 创建画布对象
 
 
-
-
 	private JToolBar toolBar;// 工具栏
 	private JButton eraserButton;// 橡皮按钮
-	private JToggleButton strokeButton1;// 细线按钮
+    private JButton strokeButton;
+    private JToggleButton strokeButton1;// 细线按钮
 	private JToggleButton strokeButton2;// 粗线按钮
 	private JToggleButton strokeButton3;// 较粗按钮
 	private JButton backgroundButton;// 背景色按钮
@@ -64,6 +43,7 @@ public class MyFrame extends JFrame implements FrameGetShape {
 	private JButton saveButton;// 保存按钮
 	private JButton shapeButton;// 图形按钮
 	private JButton textButton;//文本按钮
+    private JButton fillButton;//填充按钮
 	private JMenuItem strokeMenuItem1;// 细线菜单
 	private JMenuItem strokeMenuItem2;// 粗线菜单
 	private JMenuItem strokeMenuItem3;// 较粗菜单
@@ -74,14 +54,17 @@ public class MyFrame extends JFrame implements FrameGetShape {
 	private JMenuItem exitMenuItem;// 退出菜单
 	private JMenuItem saveMenuItem;// 保存菜单
 
-	/**
+    private JTextField jtf;
+
+    /**
 	 * 构造方法
 	 */
 	public MyFrame() {
 		setResizable(false);// 窗体不能改变大小
 		setTitle("画图程序");// 设置标题
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);// 窗体关闭则停止程序
-		setBounds(500, 100, 574, 460);// 设置窗口位置和宽高
+		setBounds(500, 200, 574, 460);// 设置窗口位置和宽高
+
 
 		init();// 组件初始化
 		addListener();// 添加组件监听
@@ -92,7 +75,9 @@ public class MyFrame extends JFrame implements FrameGetShape {
 	 */
 	private void init() {
 		g.setColor(canvas.backgroundColor); // 用背景色设置绘图对象的颜色
-		g.fillRect(0, 0, 583, 498); // 用背景色填充整个画布
+        canvas.width = 570;
+        canvas.height = 360;
+		g.fillRect(0, 0, canvas.width, canvas.height); // 用背景色填充整个画布
 		g.setColor(canvas.foreColor); // 用前景色设置绘图对象的颜色
 		canvas.setImage(image); // 设置画布的图像
 		getContentPane().add(canvas); // 将画布添加到窗体容器默认布局的中部位置
@@ -146,10 +131,16 @@ public class MyFrame extends JFrame implements FrameGetShape {
 		eraserButton.setToolTipText("橡皮");// 设置按钮鼠标悬停提示
 		eraserButton.setIcon(new ImageIcon("src/img/icon/橡皮.png"));// 设置按钮图标
 		toolBar.add(eraserButton);// 工具栏添加按钮
+        toolBar.addSeparator();// 添加分割条
+
         textButton = new JButton();// 初始化按钮对象，并添加文本内容
         textButton.setToolTipText("文本");// 设置按钮鼠标悬停提示
         textButton.setIcon(new ImageIcon("src/img/icon/橡皮.png"));// 设置按钮图标
         toolBar.add(textButton);// 工具栏添加按钮
+        fillButton = new JButton();// 初始化按钮对象，并添加文本内容
+        fillButton.setToolTipText("填充");// 设置按钮鼠标悬停提示
+        fillButton.setIcon(new ImageIcon("src/img/icon/橡皮.png"));// 设置按钮图标
+        toolBar.add(fillButton);// 工具栏添加按钮
 
 		JMenuBar menuBar = new JMenuBar();// 创建菜单栏
 		setJMenuBar(menuBar);// 窗体载入菜单栏
@@ -184,6 +175,17 @@ public class MyFrame extends JFrame implements FrameGetShape {
 		editMenu.add(clearMenuItem);// 菜单添加菜单项
 		eraserMenuItem = new JMenuItem("橡皮");// 初始化菜单项对象，并添加文本内容
 		editMenu.add(eraserMenuItem);// 菜单添加菜单项
+
+        jtf = new JTextField("dsiiutttv",20);
+        jtf.setLocation(new Point(400,200));
+        //this.setLocation(new Point(00,20));
+
+        strokeButton = new JButton();// 初始化按钮对象，并添加文本内容
+        strokeButton.setToolTipText("STROKE");// 设置按钮鼠标悬停提示
+        strokeButton.setIcon(new ImageIcon("src/img/icon/橡皮.png"));// 设置按钮图标
+        toolBar.add(strokeButton);// 工具栏添加按钮
+        toolBar.addSeparator();// 添加分割条
+
 
 	}
 
@@ -225,6 +227,27 @@ public class MyFrame extends JFrame implements FrameGetShape {
             }
         });
 
+        strokeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                StrokeWindow strokeWindow = new StrokeWindow(
+                        MyFrame.this);// 创建画笔选择组件
+                int strokeButtonWidth = strokeButton1.getWidth();// 获取画笔按钮宽度
+                int strokeWindowWidth = strokeWindow.getWidth();// 获取画笔按钮高度
+                int strokeButtonX = strokeButton1.getX();// 获取画笔按钮横坐标
+                int strokeButtonY = strokeButton1.getY();// 获取画笔按钮纵坐标
+                // 计算画笔组件横坐标，为画笔按钮下方与按钮居中对齐
+                int strokeWindowX = getX() + strokeButtonX
+                        - (strokeWindowWidth - strokeButtonWidth) / 2;
+                // 计算画笔组件纵坐标，为画笔按钮下方
+                int strokeWindowY = getY() + strokeButtonY + 80;
+                // 设置画笔组件坐标位置
+                strokeWindow.setLocation(strokeWindowX, strokeWindowY);
+                strokeWindow.setVisible(true);// 画笔组件可见
+            }
+        });
+
+
         strokeButton1.addActionListener(new ActionListener() {// “细线”按钮添加动作监听
             public void actionPerformed(final ActionEvent arg0) {// 点击时
                 // 声明画笔的属性，粗细为1像素，线条末端无修饰，折线处呈尖角
@@ -251,6 +274,7 @@ public class MyFrame extends JFrame implements FrameGetShape {
                 g.setStroke(bs); // 画图工具使用此画笔
             }
         });
+
 
         backgroundButton.addActionListener(new ActionListener() {// 背景颜色按钮添加动作监听
             public void actionPerformed(final ActionEvent arg0) {// 点击时
@@ -309,12 +333,25 @@ public class MyFrame extends JFrame implements FrameGetShape {
                 }
                 canvas.text = false;
                 canvas.drawShape = false;
+                canvas.fill = false;
             }
         });
 
-        textButton.addActionListener(new ActionListener() {// 橡皮按钮添加动作监听
+        textButton.addActionListener(new ActionListener() {// 文本按钮添加动作监听
             public void actionPerformed(final ActionEvent arg0) {// 点击时
                 canvas.text = true;
+                canvas.rubber = false;
+                canvas.drawShape = false;
+                canvas.fill = false;
+                canvas.intext = jtf.getText();
+                //System.out.println(canvas.intext);
+            }
+        });
+
+        fillButton.addActionListener(new ActionListener() {// 填充按钮添加动作监听
+            public void actionPerformed(final ActionEvent arg0) {// 点击时
+                canvas.fill = true;
+                canvas.text = false;
                 canvas.rubber = false;
                 canvas.drawShape = false;
             }

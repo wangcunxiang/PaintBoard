@@ -1,32 +1,27 @@
 
-import com.mr.util.DrawImageUtil;
-import com.mr.util.ShapeWindow;
-import com.mr.util.Shapes;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.util.Stack;
 
-/**
- * 简笔画展示窗体
- * 
- * @开发单位 吉林省明日科技有限公司
- * @公司网址 www.mingribook.com
- */
 public class MyCanvas extends Canvas {
-	private Image image = null; // 创建画板中展示的图片对象
+	private BufferedImage image; // 创建画板中展示的图片对象
 	Graphics2D g;
+	int width;
+	int height;
 
 	boolean rubber = false; // 橡皮标识变量
 	boolean drawShape = false; // 画图形标识变量
 	boolean text = false;//
+	boolean fill = false;//
 	Color foreColor = Color.BLACK; // 定义前景色
 	Color backgroundColor = Color.WHITE; // 定义背景色
 	Shapes shape;// 绘画的图形
     private int x = -1; // 上一次鼠标绘制点的横坐标
     private int y = -1; // 上一次鼠标绘制点的纵坐标
+    String intext;
 
 	public MyCanvas(Graphics2D g){
 		this.g = g;
@@ -34,10 +29,10 @@ public class MyCanvas extends Canvas {
 	/**
 	 * 设置画板中的图片。
 	 * 
-	 * @param image
+	 * @param
 	 *            - 画板中展示的图片对象
 	 */
-	public void setImage(Image image) {
+	public void setImage(BufferedImage image) {
 		this.image = image; // 为成员变量赋值
 	}// setImage(Image image)结束
 
@@ -95,6 +90,46 @@ public class MyCanvas extends Canvas {
 			}
 
 			public void mousePressed(MouseEvent e) {// 当按键按下时
+                //System.out.println(e.getX()+"  "+e.getY());
+                if(text){
+                    g.setFont(new Font("楷体",Font.BOLD,20));
+                    g.setColor(foreColor);
+                    g.drawString(intext,e.getX(),e.getY());
+                    repaint();
+                }
+                if(fill){
+                	Stack<Point> stack = new Stack();
+                	stack.push(new Point(e.getX(), e.getY()));
+                	while(!stack.empty()){
+                		Point tem = stack.pop();
+						System.out.println(tem.x+" "+tem.y);
+                		if(tem.x > 0 && tem.x < width - 1 && tem.y > 0 && tem.y < height - 1){
+							Color color1 = new Color(image.getRGB(tem.x+1, tem.y), true);
+							Color color2 = new Color(image.getRGB(tem.x-1, tem.y), true);
+							Color color3 = new Color(image.getRGB(tem.x, tem.y+1), true);
+							Color color4 = new Color(image.getRGB(tem.x, tem.y-1), true);
+							if(color1.equals(backgroundColor)){
+								System.out.println(backgroundColor);
+								g.drawLine(tem.x,tem.y,tem.x+1,tem.y);
+								stack.push(new Point(tem.x+1, tem.y));
+							}
+							if(color2.equals(backgroundColor)){
+								g.drawLine(tem.x,tem.y,tem.x-1,tem.y);
+								stack.push(new Point(tem.x-1, tem.y));
+							}
+							if(color3.equals(backgroundColor)){
+								g.drawLine(tem.x,tem.y,tem.x,tem.y+1);
+								stack.push(new Point(tem.x, tem.y+1));
+							}
+							if(color4.equals(backgroundColor)){
+								g.drawLine(tem.x,tem.y,tem.x,tem.y-1);
+								stack.push(new Point(tem.x, tem.y-1));
+							}
+						}
+					}
+					repaint();
+
+				}
 				if (drawShape) {// 如果此时鼠标画的是图形
 					switch (shape.getType()) {// 判断图形的种类
 						case Shapes.YUAN:// 如果是圆形
