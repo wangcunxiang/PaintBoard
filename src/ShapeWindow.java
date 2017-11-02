@@ -16,19 +16,19 @@ public class ShapeWindow extends JWindow {
     private FrameGetShape frame;
     private MyCanvas canvas;
 
-    public ShapeWindow(FrameGetShape frame,MyCanvas canvas) {
+    public ShapeWindow(FrameGetShape frame,MyCanvas canvas) {//构造函数
         this.frame = frame;
         this.canvas = canvas;
         this.init();
     }
 
-    public ShapeWindow(int x, int y, FrameGetShape frame) {
+    public ShapeWindow(int x, int y, FrameGetShape frame) {//构造函数
         this.frame = frame;
         this.setLocation(x, y);
         this.init();
     }
 
-    private void init() {
+    private void init() {//图形调用的函数
         this.setSize(200, 100);
         Container c = this.getContentPane();
         c.setLayout(new BorderLayout());
@@ -51,12 +51,12 @@ public class ShapeWindow extends JWindow {
         southPanel.add(cance5);
         JButton cancel = new JButton("取消");
         southPanel.add(cancel);
-        cancel.addActionListener(new ActionListener() {
+        cancel.addActionListener(new ActionListener() {//取消按钮的监听
             public void actionPerformed(ActionEvent e) {
                 ShapeWindow.this.dispose();
             }
         });
-        cance2.addActionListener(new ActionListener() {
+        cance2.addActionListener(new ActionListener() {//直线按钮的监听
             public void actionPerformed(ActionEvent e) {
                 canvas.text = false;
                 canvas.rubber = false;
@@ -73,7 +73,7 @@ public class ShapeWindow extends JWindow {
                 ShapeWindow.this.dispose();
             }
         });
-        cance3.addActionListener(new ActionListener() {
+        cance3.addActionListener(new ActionListener() {//矩形按钮的监听
             public void actionPerformed(ActionEvent e) {
                 canvas.text = false;
                 canvas.rubber = false;
@@ -90,7 +90,7 @@ public class ShapeWindow extends JWindow {
                 ShapeWindow.this.dispose();
             }
         });
-        cance5.addActionListener(new ActionListener() {
+        cance5.addActionListener(new ActionListener() {//椭圆按钮的监听
             public void actionPerformed(ActionEvent e) {
                 canvas.text = false;
                 canvas.rubber = false;
@@ -112,7 +112,7 @@ public class ShapeWindow extends JWindow {
         this.pack();
     }
 
-    class ShapeButton extends JPanel {
+    class ShapeButton extends JPanel {//图形按钮的初始化和弹出来的内容的添加
         public ShapeButton(final Shape shape) {
             this.setSize(20, 20);
             this.setLayout(new BorderLayout());

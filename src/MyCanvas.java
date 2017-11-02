@@ -14,7 +14,7 @@ import java.util.LinkedList;
  */
 public class MyCanvas extends Canvas {
 	BufferedImage image; // 创建画板中展示的图片对象
-	BufferedImage imageclone;//保存拖拽前的图像
+	BufferedImage imageclone;
 
 	Graphics gs;
 	Graphics2D g;
@@ -27,6 +27,7 @@ public class MyCanvas extends Canvas {
 	boolean drawShape = false; // 画图形标识变量
 	boolean text = false;//
 	boolean fill = false;//
+	boolean undo = false;//
 	boolean pen = true;//
 
 	int key1 = 20;
@@ -37,12 +38,12 @@ public class MyCanvas extends Canvas {
 	Color foreColor = Color.BLACK; // 定义前景色
 	Color backgroundColor = Color.WHITE; // 定义背景色
 	Shapes shape;// 绘画的图形
-	String inputShape="";//为空则代表不绘制图形态
+	String inputShape="";
 	private int x = -1; // 上一次鼠标绘制点的横坐标
 	private int y = -1; // 上一次鼠标绘制点的纵坐标
-	private int lastX = -1;//保存上次拖拽位置
+	private int lastX = -1;
 	private int lastY = -1;
-	private int las2X = -1;//保存上上次拖拽位置
+	private int las2X = -1;
 	private int las2Y = -1;
 	private int saveX = -1;
 	private int saveY = -1;
@@ -52,9 +53,6 @@ public class MyCanvas extends Canvas {
 	int base = 10;
 	public ArrayList<Shapes> array;
 	String intext;
-	float[] dash2 = {2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f};
-	BasicStroke xbs = new BasicStroke(2.0f, BasicStroke.CAP_BUTT,
-			BasicStroke.JOIN_MITER, 10.0f, dash2, 0.0f);
 
 	public MyCanvas(Graphics2D g, Graphics2D gclone){
 		this.g = g;
@@ -83,7 +81,6 @@ public class MyCanvas extends Canvas {
 	}
 
 	public void drawthis(String shape,int x1,int y1,int x2,int y2){
-		//如果需要的话画出当前图形
 		if(shape.equals("circle")){
 			int temp;
 			if(x2<x1){temp = x1;x1 = x2; x2 = temp; }
@@ -100,7 +97,6 @@ public class MyCanvas extends Canvas {
 	}
 
 	public void savethis(String shape,int x1,int y1,int x2,int y2){
-		//保存当前绘制图形，不会将所有画过的图形保存
 		if(shape.equals("circle")){
 			int temp;
 			if(x2<x1){temp = x1;x1 = x2; x2 = temp; }
@@ -124,8 +120,10 @@ public class MyCanvas extends Canvas {
 		addMouseMotionListener(new MouseMotionAdapter() {
 			public void mouseDragged(final MouseEvent e) {// 当鼠标拖拽时
 				if (x > 0 && y > 0) {// 如果x和y存在鼠标记录
+					//System.out.println( "++" + nowMove);
 					if(nowMove){
-						//拖动上一个绘制的图形，实现方法与绘制图形类似,先保存好imageclone，动态绘制image
+						//System.out.println( lastX +" "+ las2X + " "+ array.get(array.size() - 1).getX());
+
 						rubber = false;
 						pen = false;
 						las2X = lastX;
@@ -133,34 +131,31 @@ public class MyCanvas extends Canvas {
 						array.get(array.size() - 1).setX(saveX  - x +  las2X);
 						array.get(array.size() - 1).setY(saveY  - y +  las2Y);
 						g.setColor(backgroundColor);
-						Stroke sbs = g.getStroke();
-						g.setStroke(xbs);
-						g.drawRect(array.get(array.size() - 1).getX() - 5, array.get(array.size() - 1).getY() - 5, array.get(array.size() - 1).getWidth() + 10, array.get(array.size() - 1).getHeight() + 10);
-						g.setStroke(sbs);
 						array.get(array.size() - 1).draw(g);
+						//drawthis(inputShape, x,y,las2X,las2Y);
 						if (cur++ % 10 == 0)image.setData(imageclone.getData());
 						lastX = e.getX();
 						lastY = e.getY();
+						//lastY = e.getY();
 						g.setColor(foreColor);
+						/*for (Shapes s: array)
+						{
+							if(s!=array.get(array.size() - 1))s.draw(g);
+						}*/
 						array.get(array.size() - 1).setX(saveX  - x +  lastX);
 						array.get(array.size() - 1).setY(saveY  - y +  lastY);
-						g.setColor(new Color(58,177,211));
-						g.setStroke(xbs);
-						g.drawRect(array.get(array.size() - 1).getX() - 5, array.get(array.size() - 1).getY() - 5, array.get(array.size() - 1).getWidth() + 10, array.get(array.size() - 1).getHeight() + 10);
-						g.setStroke(sbs);
-						g.setColor(foreColor);
 						array.get(array.size() - 1).draw(g);
 					}
 					else if (rubber) {// 橡皮标识为true，表示使用橡皮
 						drawAll(gclone);
-						array.clear();//画图前先保存所有图形，并清空array，
+						array.clear();
 						g.setColor(backgroundColor); // 绘图工具使用背景色
 						gclone.setColor(backgroundColor);
 						g.fillRect(e.getX(), e.getY(), 10, 10); // 在鼠标划过的位置画填充的正方型
 						gclone.fillRect(e.getX(), e.getY(), 10, 10);
 						g.setColor(foreColor); // 绘图工具使用背景色
 						gclone.setColor(foreColor);
-					} else if(pen){ // 如果pen标识为true，表示用画笔画图
+					} else if(pen){ // 如果橡皮标识为false，表示用画笔画图
 						g.setColor(foreColor);
 						gclone.setColor(foreColor);
 						g.drawLine(x, y, e.getX(), e.getY());// 在鼠标划过的位置画直线
@@ -169,19 +164,19 @@ public class MyCanvas extends Canvas {
 						y = e.getY(); // 上一次鼠标绘制点的纵坐标
 					}// else结束
 					else if(inputShape.equals("circle")||inputShape.equals("rectangle")||inputShape.equals("Line")){
-						//绘制图形，imageclone为保存的原始态，image为动态生成的当前图形，通过覆盖上次位置的图形实现拖动
 						rubber = false;
 						pen = false;
 						las2X = lastX;
 						las2Y = lastY;
 						g.setColor(backgroundColor);
 						drawthis(inputShape, x,y,las2X,las2Y);
-						if (cur++ % 2 == 0)image.setData(imageclone.getData());//将image置为原始态，每次都置会使画面不流畅
+						if (cur++ % 2 == 0)image.setData(imageclone.getData());
 						lastX = e.getX();
 						lastY = e.getY();
 						g.setColor(foreColor);
+						//drawAll(g);
 						drawthis(inputShape, x,y,lastX,lastY);
-
+						//repaint();
 					}
 				}// if结束
 				repaint(); // 更新画布
@@ -278,48 +273,25 @@ public class MyCanvas extends Canvas {
 
 				savethis(inputShape,x,y,e.getX(),e.getY());
 				//System.out.println(canMove);
-				if(nowMove){
-					Stroke sbs = g.getStroke();
-					Color cc = g.getColor();
-					g.setStroke(xbs);
-					g.setColor(backgroundColor);
-					g.drawRect(array.get(array.size() - 1).getX() - 5, array.get(array.size() - 1).getY() - 5, array.get(array.size() - 1).getWidth() + 10, array.get(array.size() - 1).getHeight() + 10);
-					g.setStroke(sbs);
-					g.setColor(cc);
-				}
 				if(canMove){
-					x = e.getX();
-					y = e.getY();
-					if(	x >= array.get(array.size() - 1).getX() &&
-							x <= array.get(array.size() - 1).getX() + array.get(array.size() - 1).getWidth() &&
-							y <= array.get(array.size() - 1).getY() + array.get(array.size() - 1).getHeight() &&
-							y >= array.get(array.size() - 1).getY() ){
-						//System.out.println("1");
-					}else {
-						canMove = false;
-						pen =true;
-						//还原状态并保存
-						drawAll(gclone);
-					}
+					canMove = false;
+					pen =true;
+					//System.out.println("wawa");
+					drawAll(gclone);
 				}
 				if(!inputShape.equals("")){
 					canMove = true;
 					nowMove = false;
 					inputShape = "";
-					g.setColor(new Color(58,177,211));
-					Stroke sbs = g.getStroke();
-					g.setStroke(xbs);
-					g.drawRect(array.get(array.size() - 1).getX() - 5, array.get(array.size() - 1).getY() - 5, array.get(array.size() - 1).getWidth() + 10, array.get(array.size() - 1).getHeight() + 10);
-					g.setStroke(sbs);
-					g.setColor(foreColor);
+
 				}
 				else{
 					nowMove = false;
-					//canMove = false;
+					canMove = false;
 				}
-				repaint();
+
 				frame.number++;
-				frame.autosave();//保存此画面
+				frame.autosave();
 				x = -1; // 将记录上一次鼠标绘制点的横坐标恢复成-1
 				y = -1; // 将记录上一次鼠标绘制点的纵坐标恢复成-1
 			}
@@ -329,7 +301,7 @@ public class MyCanvas extends Canvas {
 				if(rubber)inputShape = "";
 				x = e.getX();
 				y = e.getY();
-				if(canMove){//当鼠标点击上一个绘制的图形的矩形框内部时触发图形拖动
+				if(canMove){
 					if(	x >= array.get(array.size() - 1).getX() &&
 							x <= array.get(array.size() - 1).getX() + array.get(array.size() - 1).getWidth() &&
 							y <= array.get(array.size() - 1).getY() + array.get(array.size() - 1).getHeight() &&
@@ -337,10 +309,9 @@ public class MyCanvas extends Canvas {
 						nowMove = true;
 						saveX = array.get(array.size() - 1).getX();
 						saveY = array.get(array.size() - 1).getY();
-						g.drawRect(array.get(array.size() - 1).getX() - 5, array.get(array.size() - 1).getY() - 5, array.get(array.size() - 1).getWidth() + 10, array.get(array.size() - 1).getHeight() + 10);
 					}
 					else{
-						//不移动，绘制当前图像
+						//System.out.println("+++++++++++++++++");
 						drawAll(g);
 						drawAll(gclone);
 					}

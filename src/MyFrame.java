@@ -85,7 +85,7 @@ public class MyFrame extends JFrame implements FrameGetShape {
     /**
 	 * 构造方法
 	 */
-	public MyFrame() {
+	public MyFrame() {//构造函数
 		setResizable(false);// 窗体不能改变大小
 		setTitle("画图程序");// 设置标题
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);// 窗体关闭则停止程序
@@ -254,7 +254,7 @@ public class MyFrame extends JFrame implements FrameGetShape {
             }
         });
 
-        strokeButton.addActionListener(new ActionListener() {
+        strokeButton.addActionListener(new ActionListener() {//线条按钮的设置和监听
             @Override
             public void actionPerformed(ActionEvent e) {
                 StrokeWindow strokeWindow = new StrokeWindow(
@@ -509,7 +509,7 @@ public class MyFrame extends JFrame implements FrameGetShape {
         canvas.drawShape = true;// 画图形标识变量为true，说明选择鼠标画的是图形，而不是线
 	}// getShape()结束
 
-    public void autosave(){
+    public void autosave(){//存储当前图片
 	    String name = "image"+number;//设定要自动保存的文件名
         DrawImageUtil.saveImage2(MyFrame.this, image, name);//调用函数，保存文件
     }
